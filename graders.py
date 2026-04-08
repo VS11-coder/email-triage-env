@@ -89,6 +89,7 @@ def grade_easy(actions_taken: List[Dict[str, Any]]) -> Dict[str, Any]:
         }
 
     final_score = (category_score * 0.6 + priority_score * 0.4) / n
+    final_score = max(0.001, min(0.999, final_score))
     return {
         "score": round(final_score, 4),
         "category_accuracy": round(category_score / n, 4),
@@ -196,6 +197,7 @@ def grade_medium(actions_taken: List[Dict[str, Any]]) -> Dict[str, Any]:
         details[email_id] = {"score": score, "must_reply": must_reply}
 
     final_score = total_score / n
+    final_score = max(0.001, min(0.999, final_score))
     return {"score": round(final_score, 4), "details": details}
 
 
@@ -333,6 +335,7 @@ def grade_hard(actions_taken: List[Dict[str, Any]]) -> Dict[str, Any]:
     # Coverage bonus: reward processing all emails
     coverage = len(action_map) / len(HARD_GT)
     final_score = min(1.0, final_score * 0.85 + coverage * 0.15)
+    final_score = max(0.001, min(0.999, final_score))
 
     return {
         "score": round(final_score, 4),

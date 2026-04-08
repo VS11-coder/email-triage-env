@@ -293,6 +293,7 @@ def run_task(task: str) -> None:
     except Exception as exc:
         print(f"[ERROR] {exc}", file=sys.stderr)
     finally:
+        final_score = max(0.001, min(0.999, final_score))
         rewards_str = ",".join(f"{r:.2f}" for r in rewards)
         print(f"[END] success={str(success).lower()} steps={step_n} score={final_score:.3f} rewards={rewards_str}")
         sys.stdout.flush()

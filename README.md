@@ -1,3 +1,12 @@
+---
+title: Email Triage OpenEnv
+emoji: 📧
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+app_port: 7860
+---
 # 📬 Email Triage OpenEnv
 
 A **real-world email triage and management** reinforcement learning environment built for the [OpenEnv RL Challenge](https://huggingface.co/spaces/openenv). Agents must process a realistic inbox — classifying, replying, archiving, and scheduling — with increasing complexity across three graduated tasks.

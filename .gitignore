@@ -1,0 +1,31 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+# (Note: not ignoring 'env/' because this repository uses an 'env/' directory for source code)
+.venv/
+venv/
+conda-env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# MacOS
+.DS_Store
+
+# Environment variables
+.env
+
+# Logs and databases
+*.log
+*.sqlite

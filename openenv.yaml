@@ -1,0 +1,122 @@
+name: email-triage-env
+version: "1.1.0"
+description: >
+  A real-world email triage and management environment for evaluating
+  LLM agents on practical inbox tasks. Agents must classify, respond to,
+  and organise emails with increasing complexity across three tasks.
+author: OpenEnv Hackathon
+tags:
+  - openenv
+  - email
+  - triage
+  - real-world
+  - nlp
+  - productivity
+
+tasks:
+  - name: email_classification
+    difficulty: easy
+    description: >
+      Classify 15 emails by category (spam, personal, work, newsletter)
+      and priority (urgent, medium, low). Pure classification task with
+      deterministic grading against ground-truth labels.
+    max_steps: 50
+    reward_range: [0.0, 1.0]
+
+  - name: email_response
+    difficulty: medium
+    description: >
+      Process 8 work emails: draft professional replies for emails that
+      require responses, and archive or flag others appropriately.
+      Graded on reply quality (keyword coverage, tone) and correct
+      non-reply decisions.
+    max_steps: 40
+    reward_range: [0.0, 1.0]
+
+  - name: inbox_management
+    difficulty: hard
+    description: >
+      Full inbox triage of 17 mixed emails. Agent must correctly
+      prioritise urgent items, delete spam, archive FYI emails, reply
+      to emails needing responses, flag follow-ups, and schedule
+      meetings when requested. Weighted by email priority.
+    max_steps: 80
+    reward_range: [0.0, 1.0]
+
+observation_space:
+  type: object
+  fields:
+    current_email:
+      type: object
+      description: The email currently being processed (id, sender, subject, body, timestamp)
+    inbox_summary:
+      type: object
+      description: Stats — total emails, current index, steps taken, score so far
+    task_description:
+      type: string
+      description: Natural-language description of the task and available actions
+    available_actions:
+      type: array
+      description: List of valid action_type strings for the current task
+    step:
+      type: integer
+    done:
+      type: boolean
+    message:
+      type: string
+      description: Feedback from the last action
+    actions_taken_summary:
+      type: array
+      description: List of {email_id, action_type} dicts summarising actions taken so far (excludes duplicates)
+
+action_space:
+  type: object
+  fields:
+    action_type:
+      type: string
+      enum: [classify, reply, archive, flag, delete, mark_read, schedule_meeting, next_email, skip, submit]
+    email_id:
+      type: string
+      optional: true
+    classification:
+      type: string
+      enum: [spam, personal, work, newsletter, urgent]
+      optional: true
+    reply_text:
+      type: string
+      optional: true
+      max_length: 2000
+    flag_reason:
+      type: string
+      optional: true
+      max_length: 500
+    meeting_time:
+      type: string
+      optional: true
+    notes:
+      type: string
+      description: Used for priority in classification tasks
+      optional: true
+      max_length: 200
+
+reward:
+  type: float
+  range: [-0.5, 1.0]
+  description: >
+    Incremental rewards are given throughout the episode for correct
+    intermediate actions (classify, reply, flag, archive). A terminal
+    reward equal to the final graded score is given on submit.
+    Penalties apply for skipping, invalid actions, duplicate actions,
+    and max-step violation.
+
+server:
+  framework: fastapi
+  port: 7860
+  endpoints:
+    - POST /reset
+    - POST /step
+    - GET  /state
+    - GET  /tasks
+    - DELETE /session
+    - GET  /sessions
+    - GET  /metrics

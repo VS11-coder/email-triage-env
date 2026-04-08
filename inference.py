@@ -251,6 +251,7 @@ def run_task(task: str) -> None:
     history = []
     last_error = "null"
     success = False
+    final_score = 0.0
 
     try:
         while not done:
@@ -293,7 +294,7 @@ def run_task(task: str) -> None:
         print(f"[ERROR] {exc}", file=sys.stderr)
     finally:
         rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-        print(f"[END] success={str(success).lower()} steps={step_n} rewards={rewards_str}")
+        print(f"[END] success={str(success).lower()} steps={step_n} score={final_score:.3f} rewards={rewards_str}")
         sys.stdout.flush()
         api_close()
 

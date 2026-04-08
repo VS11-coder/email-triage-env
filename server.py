@@ -157,8 +157,10 @@ class ResetRequest(BaseModel):
 
 
 @app.post("/reset", response_model=ResetResult)
-def reset(req: ResetRequest):
+def reset(req: Optional[ResetRequest] = None):
     """Reset (or initialise) the environment for a given task."""
+    if req is None:
+        req = ResetRequest()
     try:
         env = EmailTriageEnv(task=req.task)
         _envs[req.session_id] = env

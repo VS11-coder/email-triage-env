@@ -334,7 +334,31 @@ def grade_hard(actions_taken: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     # Coverage bonus: reward processing all emails
     coverage = len(action_map) / len(HARD_GT)
-    final_score = min(1.0, final_score * 0.85 + coverage * 0.15)
+    final_score = min(1.0, final_score * 0.80 + coverage * 0.15)
+
+    # Dependency ordering bonus: reward agents that process prerequisites first
+    dep_bonus = 0.0
+    dep_count = 0
+    # Build step ordering from actions_taken
+    email_first_step: Dict[str, int] = {}
+    for i, a in enumerate(actions_taken):
+        eid = a.get("email_id")
+        if eid and eid not in email_first_step:
+            email_first_step[eid] = i
+    for email_id, gt in HARD_GT.items():
+        dep = gt.get("depends_on")
+        if dep:
+            dep_count += 1
+            dep_step = email_first_step.get(dep)
+            this_step = email_first_step.get(email_id)
+            if dep_step is not None and this_step is not None:
+                if dep_step < this_step:
+                    dep_bonus += 0.15  # correct order
+                else:
+                    dep_bonus -= 0.1   # wrong order
+    if dep_count > 0:
+        final_score += dep_bonus / dep_count * 0.05  # 5% weight for ordering
+
     final_score = max(0.001, min(0.999, final_score))
 
     return {

@@ -239,7 +239,7 @@ HARD_EMAILS = [
         "subject": "Board presentation - URGENT",
         "body": "We need the Q4 metrics deck ready by 3 PM today for the board. Current version is missing revenue breakdown and churn analysis. Please coordinate with finance and get this done.",
         "timestamp": "2024-01-15T08:00:00",
-        "ground_truth": {"priority": "urgent", "action": "reply+flag", "requires_meeting": False},
+        "ground_truth": {"priority": "urgent", "action": "reply+flag", "requires_meeting": False, "depends_on": "h004"},
     },
     {
         "id": "h002",
@@ -303,7 +303,7 @@ HARD_EMAILS = [
         "subject": "API integration issue - blocking our launch",
         "body": "Hi, your API has been returning 503 errors intermittently since last night. This is blocking our product launch scheduled for tomorrow. We need a fix or a workaround ASAP.",
         "timestamp": "2024-01-15T10:30:00",
-        "ground_truth": {"priority": "urgent", "action": "reply+flag", "requires_technical_response": True},
+        "ground_truth": {"priority": "urgent", "action": "reply+flag", "requires_technical_response": True, "depends_on": "h012"},
     },
     {
         "id": "h010",
@@ -344,7 +344,7 @@ HARD_EMAILS = [
         "subject": "Customer escalation — Acme Corp threatening to churn",
         "body": "Acme Corp (our #3 account, $400k ARR) has raised a P1 escalation about the data export feature being broken for 5 days. They're threatening to switch to a competitor. I need you on a call with them tomorrow at 10 AM. Prep a root cause analysis before the call.",
         "timestamp": "2024-01-15T12:00:00",
-        "ground_truth": {"priority": "urgent", "action": "reply+flag+schedule", "requires_meeting": True, "proposed_time": "tomorrow 10 AM"},
+        "ground_truth": {"priority": "urgent", "action": "reply+flag+schedule", "requires_meeting": True, "proposed_time": "tomorrow 10 AM", "depends_on": "h009"},
     },
     {
         "id": "h015",
@@ -368,6 +368,6 @@ HARD_EMAILS = [
         "subject": "Quick question about the codebase",
         "body": "Hi! I'm the new intern on the platform team. I'm having trouble understanding the event sourcing patterns in the orders module. Would you have 15 minutes sometime this week to walk me through it?",
         "timestamp": "2024-01-15T12:45:00",
-        "ground_truth": {"priority": "low", "action": "reply+schedule", "requires_meeting": True, "proposed_time": "this week"},
+        "ground_truth": {"priority": "low", "action": "reply+schedule", "requires_meeting": True, "proposed_time": "this week", "depends_on": "h007"},
     },
 ]

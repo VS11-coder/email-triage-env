@@ -1,9 +1,11 @@
 name: email-triage-env
-version: "1.1.0"
+version: "1.2.0"
 description: >
   A real-world email triage and management environment for evaluating
   LLM agents on practical inbox tasks. Agents must classify, respond to,
   and organise emails with increasing complexity across three tasks.
+  Features inter-email dependencies, time-sensitivity mechanics, and
+  deterministic grading with 40 synthetic emails.
 author: OpenEnv Hackathon
 tags:
   - openenv
@@ -12,6 +14,8 @@ tags:
   - real-world
   - nlp
   - productivity
+  - dependencies
+  - time-sensitive
 
 tasks:
   - name: email_classification
@@ -36,12 +40,20 @@ tasks:
   - name: inbox_management
     difficulty: hard
     description: >
-      Full inbox triage of 17 mixed emails. Agent must correctly
-      prioritise urgent items, delete spam, archive FYI emails, reply
-      to emails needing responses, flag follow-ups, and schedule
-      meetings when requested. Weighted by email priority.
+      Full inbox triage of 17 mixed emails with inter-email dependencies.
+      Agent must correctly prioritise urgent items, delete spam, archive
+      FYI emails, reply to emails needing responses, flag follow-ups, and
+      schedule meetings when requested. Some emails are contextually
+      related (e.g., an escalation depends on understanding the underlying
+      technical issue). Weighted by email priority with bonuses for
+      correct dependency ordering and early handling of urgent items.
     max_steps: 80
     reward_range: [0.0, 1.0]
+    features:
+      - inter_email_dependencies
+      - time_sensitivity_bonus
+      - priority_weighted_scoring
+      - dependency_ordering_bonus
 
 observation_space:
   type: object
@@ -51,7 +63,9 @@ observation_space:
       description: The email currently being processed (id, sender, subject, body, timestamp)
     inbox_summary:
       type: object
-      description: Stats — total emails, current index, steps taken, score so far
+      description: >
+        Stats — total emails, current index, steps taken, score so far,
+        dependency_hint (for hard task), urgency_bonus_available
     task_description:
       type: string
       description: Natural-language description of the task and available actions
@@ -64,7 +78,7 @@ observation_space:
       type: boolean
     message:
       type: string
-      description: Feedback from the last action
+      description: Feedback from the last action (includes early-handling bonus notifications)
     actions_taken_summary:
       type: array
       description: List of {email_id, action_type} dicts summarising actions taken so far (excludes duplicates)
@@ -107,7 +121,8 @@ reward:
     intermediate actions (classify, reply, flag, archive). A terminal
     reward equal to the final graded score is given on submit.
     Penalties apply for skipping, invalid actions, duplicate actions,
-    and max-step violation.
+    and max-step violation. Bonuses for early handling of urgent emails
+    (+0.05) and correct dependency ordering (+5% of final score).
 
 server:
   framework: fastapi
@@ -117,6 +132,7 @@ server:
     - POST /step
     - GET  /state
     - GET  /tasks
+    - GET  /info
     - DELETE /session
     - GET  /sessions
     - GET  /metrics

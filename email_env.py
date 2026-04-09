@@ -15,6 +15,19 @@ from env.models import (
 from env.graders import grade_easy, grade_medium, grade_hard
 from env.data.emails import EASY_EMAILS, MEDIUM_EMAILS, HARD_EMAILS
 
+# Build dependency lookup for Hard task
+_HARD_DEPS = {}
+for _e in HARD_EMAILS:
+    _dep = _e.get("ground_truth", {}).get("depends_on")
+    if _dep:
+        _HARD_DEPS[_e["id"]] = _dep
+
+# Build email subject lookup for dependency hints
+_EMAIL_SUBJECTS = {}
+for _elist in [EASY_EMAILS, MEDIUM_EMAILS, HARD_EMAILS]:
+    for _e in _elist:
+        _EMAIL_SUBJECTS[_e["id"]] = _e["subject"]
+
 
 TASK_CONFIG = {
     "email_classification": {
@@ -244,7 +257,22 @@ class EmailTriageEnv:
                 message = "Reply too short — please write a meaningful response."
             else:
                 reward = 0.1
-                message = f"Reply recorded for '{email_id}'."
+                # Time-sensitivity bonus: urgent emails handled early get extra reward
+                current_email_data = None
+                for raw_e in self._cfg["emails"]:
+                    if raw_e["id"] == email_id:
+                        current_email_data = raw_e
+                        break
+                if current_email_data:
+                    priority = current_email_data.get("ground_truth", {}).get("priority", "")
+                    early_threshold = self._cfg["max_steps"] * 0.3
+                    if priority in ("urgent", "high") and self._step_count <= early_threshold:
+                        reward += 0.05
+                        message = f"Reply recorded for '{email_id}'. ⚡ Early handling bonus!"
+                    else:
+                        message = f"Reply recorded for '{email_id}'."
+                else:
+                    message = f"Reply recorded for '{email_id}'."
 
         elif action.action_type == "flag":
             reward = 0.05
@@ -312,6 +340,27 @@ class EmailTriageEnv:
             if a.get("email_id") and not a.get("duplicate")
         ]
 
+        # Enhancement: Dependency hints for Hard task
+        dependency_hint = None
+        urgency_bonus = False
+        if email and self.task_name == "inbox_management":
+            dep_id = _HARD_DEPS.get(email.id)
+            if dep_id:
+                processed_ids_for_dep = {a["email_id"] for a in self._actions_taken if a.get("email_id")}
+                dep_subject = _EMAIL_SUBJECTS.get(dep_id, dep_id)
+                if dep_id not in processed_ids_for_dep:
+                    dependency_hint = f"💡 This email is related to '{dep_subject}' ({dep_id}). Consider processing that email first for better context."
+                else:
+                    dependency_hint = f"✅ Related email '{dep_subject}' ({dep_id}) already processed."
+            # Check if urgency bonus is available
+            for raw_e in self._cfg["emails"]:
+                if raw_e["id"] == email.id:
+                    priority = raw_e.get("ground_truth", {}).get("priority", "")
+                    early_threshold = self._cfg["max_steps"] * 0.3
+                    if priority in ("urgent", "high") and self._step_count <= early_threshold:
+                        urgency_bonus = True
+                    break
+
         return Observation(
             current_email=email,
             inbox_summary={
@@ -321,6 +370,8 @@ class EmailTriageEnv:
                 "max_steps": self._cfg["max_steps"],
                 "emails_touched": len(processed_ids),
                 "score_so_far": self._score,
+                "dependency_hint": dependency_hint,
+                "urgency_bonus_available": urgency_bonus,
             },
             task_description=self._cfg["description"],
             available_actions=self._cfg["available_actions"],

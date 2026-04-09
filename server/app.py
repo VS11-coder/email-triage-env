@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Email Triage OpenEnv",
     description="A real-world email triage and management RL environment.",
-    version="1.1.0",
+    version="1.2.0",
     lifespan=lifespan,
 )
 
@@ -117,9 +117,61 @@ def _get_env(session_id: str) -> EmailTriageEnv:
 def root():
     return {
         "name": "email-triage-env",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "tasks": ["email_classification", "email_response", "inbox_management"],
         "status": "running",
+    }
+
+
+@app.get("/info")
+def info():
+    """Full environment metadata for OpenEnv discovery and documentation."""
+    return {
+        "name": "email-triage-env",
+        "version": "1.2.0",
+        "description": (
+            "A real-world email triage environment for evaluating LLM agents. "
+            "Features 40 synthetic emails across 3 graduated difficulty tiers, "
+            "inter-email dependencies, time-sensitivity mechanics, and deterministic grading."
+        ),
+        "tasks": [
+            {"name": "email_classification", "difficulty": "easy", "num_emails": 15, "max_steps": 50},
+            {"name": "email_response", "difficulty": "medium", "num_emails": 8, "max_steps": 40},
+            {"name": "inbox_management", "difficulty": "hard", "num_emails": 17, "max_steps": 80},
+        ],
+        "observation_space": {
+            "current_email": {"type": "object", "fields": ["id", "sender", "subject", "body", "timestamp"]},
+            "inbox_summary": {"type": "object", "fields": ["total", "current_index", "steps_taken", "max_steps", "emails_touched", "score_so_far"]},
+            "task_description": {"type": "string"},
+            "available_actions": {"type": "array", "items": "string"},
+            "step": {"type": "integer"},
+            "done": {"type": "boolean"},
+            "message": {"type": "string"},
+            "actions_taken_summary": {"type": "array", "items": {"email_id": "string", "action_type": "string"}},
+            "dependency_hint": {"type": "string", "description": "Hint about related emails (hard task only)"},
+            "urgency_bonus_available": {"type": "boolean", "description": "Whether early handling bonus applies"},
+        },
+        "action_space": {
+            "action_type": {"type": "string", "enum": ["classify", "reply", "archive", "flag", "delete", "mark_read", "schedule_meeting", "next_email", "skip", "submit"]},
+            "email_id": {"type": "string", "optional": True},
+            "classification": {"type": "string", "enum": ["spam", "personal", "work", "newsletter"], "optional": True},
+            "reply_text": {"type": "string", "max_length": 2000, "optional": True},
+            "flag_reason": {"type": "string", "max_length": 500, "optional": True},
+            "meeting_time": {"type": "string", "optional": True},
+            "notes": {"type": "string", "description": "Priority for classification", "optional": True},
+        },
+        "reward": {
+            "range": [-0.5, 1.0],
+            "structure": "Incremental step rewards + terminal graded score on submit",
+        },
+        "features": [
+            "Inter-email dependencies (hard task)",
+            "Time-sensitivity bonus for urgent emails",
+            "Duplicate-action guardrails",
+            "Session TTL management",
+            "Structured JSON logging",
+            "Deterministic grading",
+        ],
     }
 
 

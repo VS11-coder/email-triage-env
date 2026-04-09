@@ -26,6 +26,25 @@ PRIORITY_SYNONYMS = {
     "low": {"low", "minor", "ignore", "unimportant"},
 }
 
+# Partial credit matrix: how "close" are two categories? (0.0 = totally wrong, 0.3 = close)
+CATEGORY_SIMILARITY = {
+    ("work", "newsletter"): 0.3,  # newsletters can be work-related
+    ("newsletter", "work"): 0.3,
+    ("personal", "work"): 0.2,    # sometimes ambiguous
+    ("work", "personal"): 0.2,
+    ("spam", "newsletter"): 0.2,  # marketing vs spam is blurry
+    ("newsletter", "spam"): 0.2,
+}
+
+PRIORITY_SIMILARITY = {
+    ("urgent", "medium"): 0.4,
+    ("medium", "urgent"): 0.4,
+    ("medium", "low"): 0.4,
+    ("low", "medium"): 0.4,
+    ("urgent", "low"): 0.1,
+    ("low", "urgent"): 0.1,
+}
+
 
 def _normalize_category(cat: str) -> str:
     cat = (cat or "").lower().strip()
@@ -76,12 +95,21 @@ def grade_easy(actions_taken: List[Dict[str, Any]]) -> Dict[str, Any]:
 
         if cat_ok:
             category_score += 1.0
+        else:
+            # Partial credit for close categories
+            category_score += CATEGORY_SIMILARITY.get((pred_cat, gt_cat), 0.0)
+
         if pri_ok:
             priority_score += 1.0
+        else:
+            # Partial credit for close priorities
+            priority_score += PRIORITY_SIMILARITY.get((pred_pri, gt_pri), 0.0)
 
         details[email_id] = {
             "category_correct": cat_ok,
             "priority_correct": pri_ok,
+            "category_partial": CATEGORY_SIMILARITY.get((pred_cat, gt_cat), 0.0) if not cat_ok else 1.0,
+            "priority_partial": PRIORITY_SIMILARITY.get((pred_pri, gt_pri), 0.0) if not pri_ok else 1.0,
             "predicted_category": pred_cat,
             "expected_category": gt_cat,
             "predicted_priority": pred_pri,

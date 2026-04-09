@@ -276,6 +276,9 @@ class EmailTriageEnv:
 
         elif action.action_type == "flag":
             reward = 0.05
+            # Enhancement 9: bonus for quality flag reasons
+            if action.flag_reason and len(action.flag_reason.strip()) > 10:
+                reward += 0.03  # bonus for detailed flag reason
             message = f"Email '{email_id}' flagged for follow-up."
 
         elif action.action_type == "archive":

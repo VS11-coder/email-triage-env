@@ -48,7 +48,25 @@ Process 8 work emails. For emails requiring a response, draft a professional rep
 ### Task 3 — Inbox Management (Hard)
 Full triage of a 17-email mixed inbox. Each email has a priority weight (`urgent=1.5×`, `high=1.2×`, `medium=1.0×`, `low=0.8×`). Includes customer escalations ($400k ARR churn threat), SOC 2 audit deadlines, AWS billing alerts, and intern mentoring requests. Multiple actions per email are allowed and scored. Coverage bonus rewards processing all emails.
 
-**Scoring:** Weighted action correctness (85%) + coverage (15%).
+**Scoring:** Weighted action correctness (80%) + coverage (15%) + dependency ordering (5%).
+
+---
+
+## ⚙️ Advanced Reward Mechanics
+
+This environment uses several advanced reinforcement learning reward shaping mechanics to test true LLM agent intelligence, beyond simple text matching:
+
+1. **Dependency Ordering Bonus (Hard Task)**  
+   Emails are linked contextually (e.g., an escalation `h014` is driven by an underlying technical alert `h009`). If an agent processes the prerequisite email *before* the dependent email, it receives a **+5% final score bonus**. Processing them out of order incurs a penalty.
+   
+2. **Time-Sensitivity Bonus (Medium/Hard Tasks)**  
+   Urgent emails processed within the first 30% of the episode's step budget receive a **+0.05 step reward bonus**. The `inbox_summary` dynamically surfaces `urgency_bonus_available` to hint at this urgency constraints.
+
+3. **Partial Credit Semantic Matrix (Easy Task)**  
+   Instead of binary pass/fail classification, the environment awards partial step credit for "close" semantic misses where ambiguity exists (e.g., classifying a `newsletter` as `work` yields 0.3 points, recognizing that newsletters can be work-related).
+
+4. **Flag Reason Quality Scoring**  
+   When agents use the `flag` action, they receive an additional **+0.03 micro-reward** if they provide a detailed, contextual `flag_reason` longer than 10 characters, encouraging descriptive action generation.
 
 ---
 

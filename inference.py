@@ -228,12 +228,21 @@ def get_action(task: str, observation: dict, history: list) -> dict:
         action_lines = [f"  - {a['action_type']} on {a['email_id']}" for a in actions_summary]
         actions_context = f"\nActions completed so far:\n" + "\n".join(action_lines) + "\n"
 
+    # Enhancement 10: surface dependency hints and urgency bonus to the LLM
+    strategic_hints = ""
+    dep_hint = summary.get("dependency_hint")
+    urgency_avail = summary.get("urgency_bonus_available", False)
+    if dep_hint:
+        strategic_hints += f"\n⚠️ DEPENDENCY: {dep_hint}"
+    if urgency_avail:
+        strategic_hints += "\n⚡ URGENCY BONUS: This is an urgent email. Handle it now for an early-action bonus!"
+
     user_content = f"""Current Email:
 {email_str}
 
 Inbox Summary: {json.dumps(summary)}
 Last message: {message_text}
-Available actions: {available}{actions_context}
+Available actions: {available}{actions_context}{strategic_hints}
 
 What action do you take? Respond with ONLY a JSON object."""
 

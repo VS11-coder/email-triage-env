@@ -152,8 +152,8 @@ Rewards are given **throughout the episode** (not just at terminal), providing p
 
 ```bash
 # Clone and install
-git clone <your-repo-url>
-cd email_triage_env
+git clone https://github.com/VS11-coder/email-triage-env.git
+cd email-triage-env
 pip install -r requirements.txt
 
 # Create the env/ package (needed for imports)

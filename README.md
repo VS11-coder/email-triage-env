@@ -106,7 +106,9 @@ This environment uses several advanced reinforcement learning reward shaping mec
     "steps_taken": 0,
     "max_steps": 50,
     "emails_touched": 0,
-    "score_so_far": 0.0
+    "score_so_far": 0.0,
+    "dependency_hint": "💡 This email is related to...",
+    "urgency_bonus_available": false
   },
   "task_description": "Classify each of the 15 emails...",
   "available_actions": ["classify", "next_email", "skip", "submit"],
